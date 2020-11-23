@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="itemBean"
+            type="com.example.lazyloadapp.ItemBean" />
+    </data>
+
+
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="3dp">
+
+
+        <TextView
+            android:id="@+id/tv_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/black"
+            android:textSize="15sp"
+            android:text="@{String.valueOf(itemBean.id)}"
+            tools:text="测试id" />
+
+        <TextView
+            android:id="@+id/tv_desc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_id"
+            android:textColor="@color/black"
+            android:textSize="15sp"
+            android:text="@{itemBean.desc}"
+            tools:text="测试desc" />
+
+        <TextView
+            android:id="@+id/tv_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_desc"
+            android:textColor="@color/black"
+            android:textSize="15sp"
+            android:text="@{itemBean.text}"
+            tools:text="测试text" />
+
+    </RelativeLayout>
+</layout>

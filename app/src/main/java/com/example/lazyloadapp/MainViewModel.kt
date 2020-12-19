@@ -1,13 +1,21 @@
 package com.example.lazyloadapp
 
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import androidx.databinding.ObservableField
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.lazyloadapp.MainFragment.Companion.TAG
+import java.lang.Exception
 
-class MainViewModel: ViewModel() {
+class MainViewModel : ViewModel() {
     var mShowText = ObservableField<String>()
     private val mTitleListLiveData = MutableLiveData<List<String>>()
-    private val itemBeanLiveDataList = mutableListOf<MutableLiveData<List<ItemBean>>>()
+    val itemBeanLiveData: MutableLiveData<List<ItemBean>> = MutableLiveData()
+    private val mDelayHandler = object : Handler(Looper.getMainLooper()) {
+
+    }
 
 
     fun initShowText(text: String) {
@@ -26,16 +34,17 @@ class MainViewModel: ViewModel() {
 
 
     fun getTestData(index: Int): MutableLiveData<List<ItemBean>> {
-        val mItemBeanListLiveData = MutableLiveData<List<ItemBean>>()
-        itemBeanLiveDataList.add(mItemBeanListLiveData)
         val itemList = mutableListOf<ItemBean>()
         for (i in 0..20) {
-            val itemBean = ItemBean(i*index, "desc ${i*index}", "text ${i*index} === show")
+            val itemBean = ItemBean(i * index, "desc ${i * index}", "text ${i * index} === show")
             itemList.add(itemBean)
         }
-        itemBeanLiveDataList[index].value = itemList
+        mDelayHandler.postDelayed({
+            itemBeanLiveData.value = (itemList)
+        }, 2000)
 
-       
-        return itemBeanLiveDataList[index]
+
+
+        return itemBeanLiveData
     }
 }

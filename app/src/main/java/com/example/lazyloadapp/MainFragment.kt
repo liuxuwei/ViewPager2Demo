@@ -1,6 +1,9 @@
 package com.example.lazyloadapp
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -17,18 +20,31 @@ class MainFragment : Fragment() {
     private lateinit var mainAdapter: MainAdapter
     private val mViewModel by activityViewModels<MainViewModel>()
     private lateinit var binding: FragmentMainBinding
+    private var mObserver: Observer<List<ItemBean>>? = null
     private var dataObserver: Observer<List<ItemBean>>? = null
     private var mIsFirstObserver = true
+    private val REQUEST_DATA = 10000
 
     private var mIsVisibleToUser = false
 
-    //下边这种是   by activityViewModels<>()的具体实现
-    private val mainViewModel: MainViewModel by lazy {
-        ViewModelProvider(
-            requireActivity().viewModelStore,
-            requireActivity().defaultViewModelProviderFactory
-        ).get(MainViewModel::class.java)
+    private val mDelayHandler =object : Handler(Looper.getMainLooper()) {
+        override fun handleMessage(msg: Message) {
+            super.handleMessage(msg)
+            if (msg.what == REQUEST_DATA) {
+                loadData()
+            }
+        }
     }
+
+    private var mainViewModel: MainViewModel? = null
+
+    //下边这种是   by activityViewModels<>()的具体实现
+//    private val mainViewModel: MainViewModel by lazy {
+//        ViewModelProvider(
+//            requireActivity().viewModelStore,
+//            requireActivity().defaultViewModelProviderFactory
+//        ).get(MainViewModel::class.java)
+//    }
 
     companion object {
         fun getInstance(showText: String, id: Int): MainFragment {
@@ -47,9 +63,7 @@ class MainFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.getString("showText")?.let {
-            mainViewModel.initShowText(it)
-        }
+
 
     }
 
@@ -58,16 +72,19 @@ class MainFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        arguments?.getString("showText")?.let {
-            Log.d(TAG, "onCreateView: showText = $it")
-        }
-        arguments?.getInt("id")?.let {
-            Log.d(TAG, "onCreateView: ===  id = $it")
-        }
         binding = DataBindingUtil
             .inflate(inflater, R.layout.fragment_main, container, false)
-        binding.viewModel = mViewModel
-        binding.lifecycleOwner = this.viewLifecycleOwner
+        if (mainViewModel == null) {
+            mainViewModel = ViewModelProvider(
+                this
+            ).get(MainViewModel::class.java)
+            binding.viewModel = mViewModel
+            binding.lifecycleOwner = this
+        }
+
+        arguments?.getString("showText")?.let {
+            mainViewModel?.initShowText(it)
+        }
 
         return binding.root
     }
@@ -75,25 +92,42 @@ class MainFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         initAdapter()
-        loadData()
+        var times = 0
+        mObserver = Observer<List<ItemBean>> { t ->
+            times++
+            t?.let { itemList ->
+                mainAdapter.setData(itemList)
+            }
+
+        }
+
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mDelayHandler.sendEmptyMessageDelayed(REQUEST_DATA, 1200)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Log.d(TAG, "onPause: === ")
+        mDelayHandler.removeCallbacksAndMessages(null)
+
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Log.d(TAG, "onStop: === ")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "onDestroy: === ")
     }
 
     private fun loadData() {
-        var times = 0
-
-        mainViewModel.getTestData(requireArguments().getInt("id")).observe(this.viewLifecycleOwner, Observer<List<ItemBean>> { t ->
-                times++
-                Log.d(
-                    TAG,
-                    "onChanged: times +=== $times  current fragment title " +
-                            "is ${arguments?.getString("showText")} " +
-                            "id is ${arguments?.getInt("id")}"
-                )
-                t?.let { itemList ->
-                    mainAdapter.setData(itemList)
-                }
-
-        })
+        Log.d(TAG, "loadData: start")
+        mainViewModel?.getTestData(requireArguments().getInt("id"))?.observe(this, mObserver!!)
     }
 
     private fun initAdapter() {

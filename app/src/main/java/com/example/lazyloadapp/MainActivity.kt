@@ -21,6 +21,7 @@ class MainActivity : AppCompatActivity() {
     override fun getViewModelStore(): ViewModelStore {
         return super.getViewModelStore()
     }
+
     private val mViewModel: MainViewModel by lazy {
         ViewModelProvider.AndroidViewModelFactory
             .getInstance(application).create(MainViewModel::class.java)
@@ -36,7 +37,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initTabLayout() {
-        mViewModel.getTitleList().observe(this, Observer {titleList ->
+        mBinding.mainTab.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab?) {
+                if (tab != null) {
+                    mBinding.mainViewpager.setCurrentItem(tab.position)
+                }
+            }
+
+            override fun onTabUnselected(tab: TabLayout.Tab?) {
+
+            }
+
+            override fun onTabReselected(tab: TabLayout.Tab?) {
+
+            }
+
+        })
+        mViewModel.getTitleList().observe(this, Observer { titleList ->
             createFragments(titleList)
         })
     }
@@ -50,7 +67,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initViewPager() {
-        pagerAdapter = object: FragmentStateAdapter(this){
+        pagerAdapter = object : FragmentStateAdapter(this) {
             override fun getItemCount(): Int {
                 return mFragmentList.size
             }
@@ -60,13 +77,13 @@ class MainActivity : AppCompatActivity() {
             }
         }
         mBinding.mainViewpager.adapter = pagerAdapter
-        val tabLayoutMediator = TabLayoutMediator(mBinding.mainTab, mBinding.mainViewpager, object : TabLayoutMediator.TabConfigurationStrategy{
-            override fun onConfigureTab(tab: TabLayout.Tab, position: Int) {
-                Log.d(Companion.TAG, "onConfigureTab: ===")
-            }
-        })
-
-        tabLayoutMediator.attach()
+//        val tabLayoutMediator = TabLayoutMediator(mBinding.mainTab, mBinding.mainViewpager, object : TabLayoutMediator.TabConfigurationStrategy{
+//            override fun onConfigureTab(tab: TabLayout.Tab, position: Int) {
+//                Log.d(Companion.TAG, "onConfigureTab: ===")
+//            }
+//        })
+//
+//        tabLayoutMediator.attach()
     }
 
     companion object {
